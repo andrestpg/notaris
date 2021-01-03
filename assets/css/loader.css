@@ -1,0 +1,52 @@
+
+.no-display{
+  display: none;
+}
+.loader {
+  border: 3px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 3.3px solid #007bff;
+  width: 30px;
+  height: 30px;
+  -webkit-animation: spin .7s linear infinite;
+  animation: spin .7s linear infinite;
+  display: inline-block;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.name-mobile {
+  visibility: hidden;
+}
+
+.admin-name{
+  height: 1.5rem;
+  overflow-x: hidden;
+}
+
+@media (max-width: 550px){
+  .page-login{
+    width: 80% !important;
+  }
+}
+
+.col-sm-8{
+  word-wrap: break-word;
+}
+
+.pass-view{
+	border-left: 0px !important;
+  background: none !important;
+}
+
+.pass-form{
+  border-right: 0px !important;
+}
