@@ -1,4 +1,3 @@
-
 const loader = $('#loader').html();
 const noData = $('#noData').html();
 const errData = $('#errData').html();
@@ -15,38 +14,43 @@ $('#reload').on('click', () => {
 const getPpatData = () => {
     $('#ppatContent').html(loader);
     const url = baseUrl+'ppat/getPpat';
-    let dataset = [];
-    $.get(url, async (res) => {
-        res = JSON.parse(await res);
-        let dataLength = res.length;
-        dataLength > 0 ?
-        $.each(res, async (i, dt) => {
-            i += 1;
-            let pemberi = await getPemberi(dt.id);
-            let penerima = await getPenerima(dt.id);
-            dataset.push([i, dt.nama_pengorder, dt.hukum, getDate(dt.tgl_akta),pemberi, penerima, generateOpr(dt.id)]);
-            i == dataLength &&
-                setTimeout(() => ppatContent(), 600);
-                setTimeout(() => showData(dataset, dataLength) ,1000);
-        }):
-        $('#ppatContent').html(noData);
-    })
+    globalThis.dataset = [];
+    $.get(url).done( async (res) => {
+        res = await JSON.parse(res);
+        i = 1;
+        for(const dt of res){
+            try{
+                    let pemberi = await getPemberi(dt.id);
+                    let penerima = await getPenerima(dt.id);
+                    await dataset.push([i, dt.nama_pengorder, dt.hukum, await getDate(dt.tgl_akta),pemberi, penerima, await generateOpr(dt.id)]);
+            }catch(err){
+                console.log(err);
+            }
+            i++;
+        }
+        ppatContent().then((mess) => {mess == "success" && showData(dataset)});
+    }).fail(() => {
+        $('#ppatContent').html(errData);
+    });
 }
 
 const ppatContent = () => {
-    $('#ppatContent').html(`
-        <div class="table-responsive-md no-wrap">
-            <table class="table table-actions table-striped table-hover mb-0" id="datatable">
-            </table>
-        </div>
-    `);
+    return new Promise( async (res, rej) => {
+        await $('#ppatContent').html(`
+            <div class="table-responsive-md no-wrap">
+                <table class="table table-actions table-striped table-hover mb-0" id="datatable">
+                </table>
+            </div>
+        `);
+        res("success");
+    });
 }
 
-const showData = (data, dataLength) => {
-    data.length == dataLength ?
-    ($.fn.dataTable.moment('DD-MMMM-YYYY'),
+const showData = async (data) => {
+    let dt = await data;
+    $.fn.dataTable.moment('DD-MMMM-YYYY');
     $('#datatable').DataTable({
-        data: data,
+        data: dt,
         deferRender: true,
         retrieve: true,
         columns: [
@@ -58,9 +62,8 @@ const showData = (data, dataLength) => {
             {title: "Pihak Penerima"},
             {title: "Operasi"},
         ],
-    }),
-    $('#datatable thead').addClass('thead-dark')) :
-    $('#ppatContent').html(errData);
+    });
+    $('#datatable thead').addClass('thead-dark');
 };
 
 const getPemberi = async (ppat) => {

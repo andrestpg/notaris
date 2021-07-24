@@ -1,4 +1,3 @@
-
 const loader = $('#loader').html();
 const noData = $('#noData').html();
 const errData = $('#errData').html();
@@ -16,54 +15,20 @@ const getAktaData = () => {
     $('#aktaContent').html(loader);
     const url = baseUrl+'akta/getAkta';
     let dataset = [];
-    $.get(url, (res) => {
-        res = JSON.parse(res);
-        let dataLength = res.length;
-        dataLength > 0 ?
-        $.each(res, (i, dt) => {
+    $.get(url).done( async (res) => {
+        res = await JSON.parse(res);
+        await $.each(res, async (i, dt) => {
             i += 1;
             let namaKlien = 'Data Dihapus';
             dt.knama != null && (namaKlien = dt.knama);
-            let data = [i, namaKlien, dt.no_berkas, getDate(dt.tgl_akta),dt.sifat_akta, dt.no_akta, generateOpr(dt.id)]
+            let data = [i, namaKlien, dt.no_berkas, await getDate(dt.tgl_akta),dt.sifat_akta, dt.no_akta, await generateOpr(dt.id)]
             dataset.push(data);
-            i == dataLength &&
-                setTimeout(() => aktaContent(), 600);
-                setTimeout(() => showData(dataset, dataLength), 1000);
-        }):
+        });
+        aktaContent().then((mess) => {mess == "success" && showData(dataset)});
+    }).fail(() => {
         $('#aktaContent').html(noData);
-    })
+    });
 }
-
-const aktaContent = () => {
-    $('#aktaContent').html(`
-        <div class="table-responsive">
-            <table class="table" id="datatable">
-            </table>
-        </div>
-    `)
-}
-
-const showData = async (data, dataLength) => {
-    let dt = await data;
-    dt.length == dataLength ?
-    ($.fn.dataTable.moment('DD-MMMM-YYYY'),
-    $('#datatable').DataTable({
-        data: data,
-        retrieve: true,
-        deferRender: true,
-        columns: [
-            {title: "#"},
-            {title: "Nama Klien"},
-            {title: "No Berkas"},
-            {title: "Tanggal Akta"},
-            {title: "Sifat Akta"},
-            {title: "No. Akta"},
-            {title: "Operasi"},
-        ],
-    }),
-    $('#datatable thead').addClass('thead-dark')):
-    $('#aktaContent').html(errData);
-};
 
 const getDate = (date) => {
     moment.locale('id');
@@ -91,6 +56,38 @@ const generateOpr = (id) => {
     `;
     return opr;
 }
+
+const aktaContent = () => {
+    return new Promise(async (res, rej) => {
+        await $('#aktaContent').html(`
+            <div class="table-responsive">
+                <table class="table" id="datatable">
+                </table>
+            </div>
+        `)
+        res("success");
+    })
+}
+
+const showData = async (data) => {
+    let dt = await data;
+    $.fn.dataTable.moment('DD-MMMM-YYYY');
+    $('#datatable').DataTable({
+        data: dt,
+        retrieve: true,
+        deferRender: true,
+        columns: [
+            {title: "#"},
+            {title: "Nama Klien"},
+            {title: "No Berkas"},
+            {title: "Tanggal Akta"},
+            {title: "Sifat Akta"},
+            {title: "No. Akta"},
+            {title: "Operasi"},
+        ],
+    });
+    $('#datatable thead').addClass('thead-dark');
+};
 
 const delConfirm = (id) => {
     swal({
@@ -234,4 +231,3 @@ $('#btnCetak').on('click', () => {
         $('#btnCetak').removeAttr('target');
     },100);
 });
-

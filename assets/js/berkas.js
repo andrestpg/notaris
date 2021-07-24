@@ -16,40 +16,39 @@ const getBerkasData = () => {
     $('#berkasContent').html(loader);
     const url = baseUrl+'berkas/getBerkas';
     let dataset = [];
-    $.get(url, (res) => {
-        res = JSON.parse(res);
-        let dataLength = res.length;
-        dataLength > 0 ?
-        $.each(res, (i, dt) => {
+    $.get(url).done( async (res) => {
+        res = await JSON.parse(res);
+        await $.each(res, async (i, dt) => {
             i += 1;
             let namaKlien = 'Data Dihapus';
             let namaPengorder = 'Data Dihapus';
             dt.nama_klien != null && (namaKlien = dt.nama_klien);
             dt.nama_pengorder != null && (namaPengorder = dt.nama_pengorder);
-            dataset.push([i, dt.no_berkas, getDate(dt.tgl), namaKlien, namaPengorder, dt.keterangan, generateOpr(dt.id)]);
-            i == dataLength &&
-                setTimeout(() => berkasContent(), 600);
-                setTimeout(() => showData(dataset, dataLength), 1000);
-        }):
+            dataset.push([i, dt.no_berkas, await getDate(dt.tgl), namaKlien, namaPengorder, dt.keterangan, await generateOpr(dt.id)]);
+        });
+        berkasContent().then((mess) => {mess == "success" && showData(dataset)});
+    }).fail(() => {
         $('#berkasContent').html(noData);
-    })
+    });
 }
 
 const berkasContent = () => {
-    $('#berkasContent').html(`
-        <div class="table-responsive">
-            <table class="table" id="datatable">
-            </table>
-        </div>
-    `)
+    return new Promise( async (res, rej) => {
+        await $('#berkasContent').html(`
+            <div class="table-responsive">
+                <table class="table" id="datatable">
+                </table>
+            </div>
+        `)
+        res("success");
+    })
 }
 
-const showData = async (data, dataLength) => {
+const showData = async (data) => {
     let dt = await data;
-    dt.length == dataLength ?
-    ($.fn.dataTable.moment('DD-MMMM-YYYY'),
+    $.fn.dataTable.moment('DD-MMMM-YYYY');
     $('#datatable').DataTable({
-        data: data,
+        data: dt,
         retrieve: true,
         deferRender: true,
         columns: [
@@ -61,9 +60,8 @@ const showData = async (data, dataLength) => {
             {title: "Keterangan"},
             {title: "Operasi"},
         ],
-    }),
-    $('#datatable thead').addClass('thead-dark')):
-    $('#berkasContent').html(errData);
+    });
+    $('#datatable thead').addClass('thead-dark');
 };
 
 const getDate = (date) => {
